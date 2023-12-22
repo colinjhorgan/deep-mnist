@@ -1,5 +1,6 @@
-# Model artificats
+# Model and Data artificats
 models/
+data/
 
 # Byte-compiled / optimized / DLL files
 *__pycache__/
