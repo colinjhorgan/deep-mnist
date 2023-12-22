@@ -31,7 +31,7 @@ def get_device(device: Optional[str] = None) -> torch.device:
             device = "mps"
         else:
             device = "cpu"
-        return device
+        return torch.device(device)
 
 
 class MLP(nn.Module):
@@ -79,7 +79,8 @@ def train_mlp(
         download=True,
         transform=transform,)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    device = get_device("cpu")
+    device = get_device()
+    print(device)
     model.to(device)
     objective_f = nn.CrossEntropyLoss()
     optimizer=optimizer(model.parameters(), lr=lr)
@@ -101,5 +102,6 @@ def train_mlp(
     return model
 
 
-
+if __name__ == "__main__":
+    train_mlp()
 
