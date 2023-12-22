@@ -53,7 +53,7 @@ class MLP(nn.Module):
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
-        x = F.log_softmax(x)
+        x = F.log_softmax(x, dim=0)
         return x
 
 
@@ -68,7 +68,7 @@ def train_mlp(
     *** Note that data is expected to be obtained by /config.py prior to executing
     any training. ***
     """
-    batch_size = 64
+    batch_size = 200
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,),(0.3081)) # mean and std of training data
@@ -80,17 +80,20 @@ def train_mlp(
         transform=transform,)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     device = get_device()
-    print(device)
+    print(f"Training Device: {device}")
+    print(f"Size of training dataset: {len(train_loader)}")
+    print(f"Number of batches: {batch_size}")
+    print(f"Batches per epoch: {len(train_loader)//(batch_size + 1)}")
+    
     model.to(device)
+    model.train()
     objective_f = nn.CrossEntropyLoss()
     optimizer=optimizer(model.parameters(), lr=lr)
     
-    model.train()
     for epoch in range(epochs):
         for batch_idx, (data, label) in enumerate(train_loader):
             data = data.to(device)
             label = label.to(device)
-            # model.to(device)
 
             optimizer.zero_grad()
             outputs = model(data)
@@ -98,7 +101,7 @@ def train_mlp(
             loss.backward()
             optimizer.step()
 
-        print(f"Epoch {epoch}/{epochs}: Loss = {loss.item()}")
+        print(f"Epoch {epoch+1}/{epochs}: Loss = {loss.item()}")
     return model
 
 
