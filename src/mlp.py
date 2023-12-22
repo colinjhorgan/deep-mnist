@@ -53,7 +53,7 @@ class MLP(nn.Module):
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
-        x = F.log_softmax(x, dim=0)
+        x = F.log_softmax(x, dim=1)
         return x
 
 
@@ -81,9 +81,9 @@ def train_mlp(
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     device = get_device()
     print(f"Training Device: {device}")
-    print(f"Size of training dataset: {len(train_loader)}")
+    print(f"Size of training dataset: {len(train_dataset)}")
     print(f"Number of batches: {batch_size}")
-    print(f"Batches per epoch: {len(train_loader)//(batch_size + 1)}")
+    print(f"Batches per epoch: {len(train_dataset)//(batch_size)}")
     
     model.to(device)
     model.train()
@@ -105,6 +105,44 @@ def train_mlp(
     return model
 
 
-if __name__ == "__main__":
-    train_mlp()
+def test_mlp(
+        model: MLP,
+    ):
+    """ Executes model testing."""
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,),(0.3081)) # mean and std of training data
+    ])
+    test_dataset = datasets.MNIST(
+        os.path.join(BASE_DIR, '../data'),
+        train=False,
+        download=True,
+        transform=transform,)
+    test_loader = DataLoader(test_dataset, batch_size=200)
+    print(f"Size of testing dataset: {len(test_dataset)}")
+    
+    device = get_device()
+    model.to(device)
+    objective_f = nn.CrossEntropyLoss()
 
+    with torch.no_grad():
+        loss = 0 
+        correct = 0
+        model.eval()
+
+        for data, labels in test_loader:
+            data, labels = data.to(device), labels.to(device)
+            outputs = model(data)
+            predictions = outputs.argmax(dim=1)
+            correct += labels.eq(predictions).sum()
+            loss += objective_f(outputs, labels)
+
+        accuracy = correct / len(test_dataset)
+
+    print(f"Final Loss: {loss}")
+    print(f"Final Accuracy: {accuracy}")
+
+if __name__ == "__main__":
+    model = train_mlp(epochs=20)
+    test_mlp(model)
+    torch.save(model.state_dict(), os.path.join(BASE_DIR, '../models/mnist-mlp.pt'))
