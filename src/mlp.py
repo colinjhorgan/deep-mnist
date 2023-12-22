@@ -88,8 +88,8 @@ def train_mlp(
     model.train()
     for epoch in range(epochs):
         for batch_idx, (data, label) in enumerate(train_loader):
-            data.to(device)
-            label.to(device)
+            data = data.to(device)
+            label = label.to(device)
             # model.to(device)
 
             optimizer.zero_grad()
